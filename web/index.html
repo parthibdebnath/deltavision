@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DeltaVision</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23111'/%3E%3Cpath d='M7 24L16 7l9 17' fill='none' stroke='%23ffa31a' stroke-width='3.4' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="../shared/fonts/inter.css">
+  <link rel="stylesheet" href="../shared/base.css">
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <canvas id="bg"></canvas>
+
+  <header id="topbar">
+    <button id="brand" title="Menu">DELT<span class="lambda">Λ</span>VISION<span class="beta">BETA</span></button>
+    <div class="top-mid" id="topMid"></div>
+    <div id="clock">--:--:-- --</div>
+  </header>
+
+  <main id="desktop">
+    <!-- Stock information -->
+    <section class="win" id="w-info" data-win="info" data-dots="max,close" data-minw="250" data-minh="320" data-resize="e,s,se,w,sw">
+      <div class="win-head drag">
+        <h2 class="win-title">Stock Information - <span class="sym-text">$RKLB</span></h2>
+        <div class="dots"></div>
+      </div>
+      <div class="win-body scrollbar-thin" id="infoBody">
+        <div class="info-art" id="infoArt"></div>
+        <p class="info-desc" id="infoDesc"></p>
+        <button class="ai-pill" id="aiPill">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4a3 3 0 0 0-3 3 3 3 0 0 0-2 5 3 3 0 0 0 2 5 3 3 0 0 0 3 3h1V4z"/><path d="M15 4a3 3 0 0 1 3 3 3 3 0 0 1 2 5 3 3 0 0 1-2 5 3 3 0 0 1-3 3h-1V4z"/><path d="M10 9H8M10 14H7M14 9h2M14 14h3"/></svg>
+          AI stock analysis
+        </button>
+        <div class="ai-panel" id="aiPanel" hidden></div>
+        <div class="rating" id="rating" title="">
+          <div class="rating-track"><div class="rating-dot" id="ratingDot"></div></div>
+          <div class="rating-labels"><span>BUY</span><span>HOLD</span><span>SELL</span></div>
+        </div>
+        <dl class="stats" id="stats"></dl>
+      </div>
+    </section>
+
+    <!-- Main chart -->
+    <section class="win" id="w-chart" data-win="chart" data-dots="max,min,close" data-minw="520" data-minh="300" data-resize="n,e,s,w,ne,nw,se,sw">
+      <div class="win-head drag chart-head">
+        <div class="ch-id">
+          <span class="ch-logo" id="chLogo"></span>
+          <b id="chSym">$RKLB</b><span class="ch-dash">-</span><span id="chName">Rocket Lab USA Inc.</span>
+          <span class="ch-quote" id="chQuote"></span>
+        </div>
+        <nav class="tfs" id="tfs"></nav>
+        <div class="dots"></div>
+      </div>
+      <div class="win-body chart-body">
+        <canvas id="mainChart"></canvas>
+        <div class="chart-hint" id="chartHint" hidden></div>
+      </div>
+    </section>
+
+    <!-- New order -->
+    <section class="win" id="w-order" data-win="order" data-dots="close" data-fixed="1">
+      <div class="win-head drag">
+        <h2 class="win-title">New Order - <span class="sym-text">$RKLB</span></h2>
+        <div class="dots"></div>
+      </div>
+      <div class="win-body order-body">
+        <label class="ord-row"><span>Type:</span>
+          <span class="select-wrap"><select id="ordType"><option value="market">Market</option><option value="limit">Limit</option><option value="stop">Stop</option></select></span>
+        </label>
+        <label class="ord-row"><span>Shares:</span>
+          <span class="qty-wrap"><input id="ordQty" type="text" inputmode="decimal" value="100" autocomplete="off"><span class="steps"><button id="qtyDn" title="Decrease">▾</button><button id="qtyUp" title="Increase">▴</button></span></span>
+        </label>
+        <label class="ord-row"><span>Price:</span><input id="ordPx" type="text" inputmode="decimal" autocomplete="off"></label>
+        <div class="ord-est" id="ordEst"></div>
+      </div>
+      <div class="ord-btns">
+        <button class="btn-sell" id="btnSell">SELL</button>
+        <button class="btn-buy" id="btnBuy">BUY</button>
+      </div>
+    </section>
+
+    <!-- Ticker dock -->
+    <section class="win dock" id="w-dock" data-win="dock" data-fixed="1" data-axis="y">
+      <div class="dock-grip drag" title="Drag to move"></div>
+      <div class="dock-items" id="dockItems"></div>
+      <button class="dock-add" id="dockAdd" title="Add ticker (Ctrl+K)">+</button>
+    </section>
+
+    <!-- Bottom toolbar -->
+    <section class="win toolbar" id="w-toolbar" data-win="toolbar" data-minw="760" data-resize="e,w">
+      <div class="tb-bar drag">
+        <div class="tb-group" id="tbChartType">
+          <button class="tb-ico active" data-mode="line" title="Line chart (L)"><svg viewBox="0 0 32 32" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 22l7-8 6 5 7-9 6 5"/></svg></button>
+          <button class="tb-ico" data-mode="candle" title="Candlesticks (C)"><svg viewBox="0 0 32 32" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M10 4v5M10 23v5M22 6v4M22 22v5"/><rect x="6.5" y="9" width="7" height="14" rx="1"/><rect x="18.5" y="10" width="7" height="12" rx="1"/><path d="M8.5 13h3M8.5 17h3M20.5 14h3M20.5 18h3" stroke-width="1.6"/></svg></button>
+        </div>
+        <div class="tb-sep"></div>
+        <div class="tb-group" id="tbTools">
+          <button class="tb-ico" data-tool="pen" title="Pen (P)"><svg viewBox="0 0 32 32" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M6 26l2-7L21 6l5 5-13 13z"/><path d="M18 9l5 5M8 19l5 5"/></svg></button>
+          <button class="tb-ico" data-tool="text" title="Text note (T)"><svg viewBox="0 0 32 32" width="30" height="30" fill="currentColor"><path d="M3 6h14v4h-5v17H8V10H3z"/><path d="M17 13h11v3h-4v11h-3V16h-4z"/></svg></button>
+          <button class="tb-ico" data-tool="measure" title="Measure (M)"><svg viewBox="0 0 32 32" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="16" cy="6" r="2.4"/><path d="M15 8.5L8 28M17 8.5L24 28M11 20h10"/></svg></button>
+        </div>
+        <div class="tb-sep"></div>
+        <button class="tb-news" id="tbNews" title="Show news"><span id="tbNewsText">Company XYZ set to release earnings next month</span><i>▾</i></button>
+        <div class="tb-sep"></div>
+        <div class="tb-pos" id="tbPos"></div>
+        <button class="tb-info" id="tbInfo" title="Position details"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="10"/><path d="M12 11v6" stroke-width="2"/><circle cx="12" cy="7.5" r="1.1" fill="currentColor" stroke="none"/></svg></button>
+        <div class="tb-close">
+          <button class="cl-losing" data-close="losing">Close Losing</button>
+          <button class="cl-all" data-close="all">Close All</button>
+          <button class="cl-winning" data-close="winning">Close Winning</button>
+        </div>
+      </div>
+      <div class="tb-scope" id="tbScope">
+        <button data-scope="all"><i></i>All live trades</button>
+        <button data-scope="ticker"><i></i>Current ticker</button>
+      </div>
+    </section>
+
+    <!-- Portfolio (opened from the menu, ticker dock or P/L figure) -->
+    <section class="win" id="w-portfolio" data-win="portfolio" data-dots="max,min,close" data-minw="380" data-minh="360" data-resize="n,e,s,w,ne,nw,se,sw">
+      <div class="win-head drag">
+        <h2 class="win-title">Your Portfolio</h2>
+        <div class="dots"></div>
+      </div>
+      <div class="win-body pf-body">
+        <div class="pf-top">
+          <div>
+            <div class="pf-eq" id="pfEq">$0</div>
+            <div class="pf-at" id="pfAt"></div>
+          </div>
+          <div class="pf-side" id="pfSide"></div>
+        </div>
+        <nav class="tfs small" id="pfTfs"></nav>
+        <div class="pf-chart"><canvas id="pfChart"></canvas></div>
+        <nav class="pf-tabs" id="pfTabs">
+          <button data-tab="holdings" class="active">Holdings</button>
+          <button data-tab="orders">Orders</button>
+          <button data-tab="activity">Activity</button>
+          <button data-tab="alerts">Alerts <span class="badge" id="pfAlertBadge"></span></button>
+        </nav>
+        <div class="pf-list scrollbar-thin" id="pfList"></div>
+      </div>
+    </section>
+  </main>
+
+  <div id="layer"></div>
+
+  <script src="../shared/core.js"></script>
+  <script src="../shared/chart.js"></script>
+  <script src="../shared/art.js"></script>
+  <script src="../shared/scenes.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
